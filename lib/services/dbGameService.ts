@@ -1756,21 +1756,23 @@ export function createDbGameService(): GameService {
     const prisma = getPrisma();
 
     // REPLACE semantics: set every field from the input, clearing slackUserId
-    // when absent (store null per the spec instruction).
+    // when absent (store null per the spec instruction). Empty/whitespace-only
+    // ids normalise to null so backfill never skips them (single rule, no dup).
+    const slackUserId = player.slackUserId?.trim() || null;
     await prisma.player.upsert({
       where: { id: player.id },
       create: {
         id: player.id,
         name: player.name,
         email: player.email,
-        slackUserId: player.slackUserId ?? null,
+        slackUserId,
         isAdmin: player.isAdmin,
         active: player.active,
       },
       update: {
         name: player.name,
         email: player.email,
-        slackUserId: player.slackUserId ?? null,
+        slackUserId,
         isAdmin: player.isAdmin,
         active: player.active,
       },
@@ -1810,7 +1812,7 @@ export function createDbGameService(): GameService {
   const backfillSlackIds = async (): Promise<{ updated: number }> => {
     const prisma = getPrisma();
     const unlinked = await prisma.player.findMany({
-      where: { active: true, slackUserId: null },
+      where: { active: true, OR: [{ slackUserId: null }, { slackUserId: "" }] },
     });
 
     let updated = 0;
