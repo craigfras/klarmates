@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash",
+      "PowerShell",
+      "Read",
+      "Edit",
+      "Write",
+      "Grep",
+      "Glob",
+      "TodoWrite",
+      "WebFetch",
+      "WebSearch",
+      "Skill",
+      "mcp__tokensave"
+    ]
+  }
+}

@@ -1,0 +1,243 @@
+// Engineer Guessing Game — Postgres schema (slice 08).
+//
+// Models mirror the data model in spec/engineer-guessing-game/spec.md.
+// Convention: PascalCase models + camelCase fields in Prisma, mapped to the
+// spec's snake_case table/column names via @@map/@map. The repository layer
+// (slice 09) consumes the generated client; nothing imports it at build time
+// yet, so the app still builds without DATABASE_URL set.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7 moved the connection URL out of the schema; the migration URL lives
+// in prisma.config.ts and the runtime client receives a driver adapter.
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// Week lifecycle status machine.
+enum WeekStatus {
+  draft_questions
+  awaiting_approval
+  open
+  closed
+}
+
+// ---------------------------------------------------------------------------
+// Roster
+// ---------------------------------------------------------------------------
+
+model Player {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String
+  slackUserId String?  @map("slack_user_id")
+  isAdmin     Boolean  @default(false) @map("is_admin")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  weekParticipations WeekParticipant[]
+  matchupsAsA        Matchup[]         @relation("MatchupPlayerA")
+  matchupsAsB        Matchup[]         @relation("MatchupPlayerB")
+  answers            Answer[]
+  guesses            Guess[]
+  weeklyScores       WeeklyScore[]
+  questionSuggestions QuestionSuggestion[]
+
+  @@map("players")
+}
+
+// ---------------------------------------------------------------------------
+// Seasons & weeks
+// ---------------------------------------------------------------------------
+
+model Season {
+  id        String   @id @default(uuid())
+  name      String
+  startsOn  DateTime @map("starts_on") @db.Date
+  endsOn    DateTime @map("ends_on") @db.Date
+  isCurrent Boolean  @default(false) @map("is_current")
+
+  weeks        Week[]
+  matchups     Matchup[]
+  weeklyScores WeeklyScore[]
+
+  @@map("seasons")
+}
+
+model Week {
+  id                  String     @id @default(uuid())
+  seasonId            String     @map("season_id")
+  startsAt            DateTime   @map("starts_at") @db.Timestamptz
+  endsAt              DateTime   @map("ends_at") @db.Timestamptz
+  status              WeekStatus
+  questionsApprovedAt DateTime?  @map("questions_approved_at") @db.Timestamptz
+
+  season       Season            @relation(fields: [seasonId], references: [id])
+  questions    Question[]
+  participants WeekParticipant[]
+  matchups     Matchup[]
+  weeklyScores WeeklyScore[]
+
+  @@index([seasonId])
+  @@map("weeks")
+}
+
+model Question {
+  id         String  @id @default(uuid())
+  weekId     String  @map("week_id")
+  orderIndex Int     @map("order_index")
+  text       String
+  approved   Boolean @default(false)
+
+  week    Week     @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  answers Answer[]
+  guesses Guess[]
+
+  @@index([weekId])
+  @@map("questions")
+}
+
+model WeekParticipant {
+  id       String  @id @default(uuid())
+  weekId   String  @map("week_id")
+  playerId String  @map("player_id")
+  absent   Boolean @default(false)
+  isBye    Boolean @default(false) @map("is_bye")
+
+  week   Week   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([weekId, playerId])
+  @@index([weekId])
+  @@map("week_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Matchups
+// ---------------------------------------------------------------------------
+
+model Matchup {
+  id                 String    @id @default(uuid())
+  weekId             String    @map("week_id")
+  playerAId          String    @map("player_a_id")
+  playerBId          String    @map("player_b_id")
+  guessingUnlockedAt DateTime? @map("guessing_unlocked_at") @db.Timestamptz
+
+  // Denormalized to back the in-season no-repeat rule at the DB level.
+  // seasonId mirrors week.season_id; pairKey is the unordered pair encoded as
+  // "<lowerPlayerId>:<higherPlayerId>" so {a,b} and {b,a} collide. Both are set
+  // by the repository layer (slice 09) when a matchup is created.
+  seasonId String @map("season_id")
+  pairKey  String @map("pair_key")
+
+  week    Week     @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  season  Season   @relation(fields: [seasonId], references: [id])
+  playerA Player   @relation("MatchupPlayerA", fields: [playerAId], references: [id])
+  playerB Player   @relation("MatchupPlayerB", fields: [playerBId], references: [id])
+  answers Answer[]
+  guesses Guess[]
+
+  // No pairing repeats within a season.
+  @@unique([seasonId, pairKey])
+  @@index([weekId])
+  @@map("matchups")
+}
+
+// ---------------------------------------------------------------------------
+// Answers, options & guesses
+// ---------------------------------------------------------------------------
+
+model Answer {
+  id          String   @id @default(uuid())
+  matchupId   String   @map("matchup_id")
+  questionId  String   @map("question_id")
+  playerId    String   @map("player_id")
+  text        String
+  submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz
+
+  matchup  Matchup        @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  question Question       @relation(fields: [questionId], references: [id])
+  player   Player         @relation(fields: [playerId], references: [id])
+  options  AnswerOption[]
+
+  // One answer per (matchup, question, player).
+  @@unique([matchupId, questionId, playerId])
+  @@index([matchupId])
+  @@map("answers")
+}
+
+model AnswerOption {
+  id        String  @id @default(uuid())
+  answerId  String  @map("answer_id")
+  text      String
+  isCorrect Boolean @default(false) @map("is_correct")
+
+  answer  Answer  @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  guesses Guess[]
+
+  @@index([answerId])
+  @@map("answer_options")
+}
+
+model Guess {
+  id             String   @id @default(uuid())
+  matchupId      String   @map("matchup_id")
+  questionId     String   @map("question_id")
+  guesserId      String   @map("guesser_id")
+  chosenOptionId String   @map("chosen_option_id")
+  isCorrect      Boolean  @map("is_correct")
+  submittedAt    DateTime @default(now()) @map("submitted_at") @db.Timestamptz
+
+  matchup      Matchup      @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [questionId], references: [id])
+  guesser      Player       @relation(fields: [guesserId], references: [id])
+  chosenOption AnswerOption @relation(fields: [chosenOptionId], references: [id])
+
+  // One guess per (matchup, question, guesser).
+  @@unique([matchupId, questionId, guesserId])
+  @@index([matchupId])
+  @@map("guesses")
+}
+
+// ---------------------------------------------------------------------------
+// Materialized weekly scores (fast leaderboards)
+// ---------------------------------------------------------------------------
+
+model WeeklyScore {
+  weekId              String @map("week_id")
+  playerId            String @map("player_id")
+  seasonId            String @map("season_id")
+  participationPoints Int    @map("participation_points")
+  correctGuesses      Int    @map("correct_guesses")
+  totalPoints         Int    @map("total_points")
+
+  week   Week   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id])
+
+  @@id([weekId, playerId])
+  @@index([seasonId, playerId])
+  @@map("weekly_scores")
+}
+
+// ---------------------------------------------------------------------------
+// Question suggestions (standing, week-agnostic player-authored pool)
+// ---------------------------------------------------------------------------
+
+model QuestionSuggestion {
+  id            String   @id @default(uuid())
+  text          String
+  suggestedById String   @map("suggested_by_id")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  suggestedBy Player @relation(fields: [suggestedById], references: [id])
+
+  @@index([suggestedById])
+  @@map("question_suggestions")
+}

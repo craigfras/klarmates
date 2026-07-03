@@ -1,0 +1,2224 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   Design tokens — "The Fixture"
+   Cool clear paper + indigo brand + amber signal. Light theme only (v1).
+   =========================================================================== */
+
+:root {
+  --canvas: #eceef3;
+  --surface: #fbfcfe;
+  --ink: #16181d;
+  --ink-soft: #5b6170;
+  --indigo: #2e2a8f;
+  --indigo-bright: #4f46e5;
+  --amber: #f4b400;
+  --amber-deep: #b97e00;
+  --line: #d6dae3;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow-card: 0 1px 0 rgba(22, 24, 29, 0.04), 0 18px 40px -28px rgba(46, 42, 143, 0.45);
+  --maxw: 940px;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(79, 70, 229, 0.07), transparent 60%),
+    var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+/* ===========================================================================
+   App shell + nav
+   =========================================================================== */
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px clamp(16px, 5vw, 40px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.nav-brand-mark {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 19px;
+}
+
+.nav-brand-tag {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--indigo);
+  background: rgba(79, 70, 229, 0.1);
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.nav-link[aria-current="page"] {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-link-muted {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- Auth control (production sign in/out) --- */
+.nav-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-user {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.nav-auth-btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.nav-auth-btn:hover {
+  background: var(--indigo-bright);
+}
+
+/* ===========================================================================
+   Home layout
+   =========================================================================== */
+
+.home {
+  flex: 1;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px) clamp(16px, 5vw, 40px) 72px;
+}
+
+.home-intro {
+  margin: 0 0 22px;
+}
+
+.home-kicker {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin: 0 0 8px;
+}
+
+.home-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  font-size: clamp(34px, 6vw, 56px);
+  margin: 0;
+}
+
+/* ===========================================================================
+   Fixture card
+   =========================================================================== */
+
+.fixture {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.fixture-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 16px clamp(18px, 4vw, 30px);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.fixture-eyebrow-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.fixture-week {
+  color: var(--ink);
+}
+
+/* --- The head-to-head: you | seam | opponent ----------------------------- */
+
+.fixture-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0;
+}
+
+.side {
+  padding: clamp(24px, 4vw, 38px) clamp(18px, 4vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.side-opp {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.side-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.side-name {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  font-size: clamp(24px, 4vw, 34px);
+  overflow-wrap: break-word;
+}
+
+.side-you .side-name {
+  color: var(--indigo);
+}
+
+.side-handle {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.side-pip {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.side-opp .side-pip {
+  flex-direction: row-reverse;
+}
+
+.side-pip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.side-pip-dot.is-on {
+  background: var(--indigo-bright);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+}
+
+.side-empty .side-name {
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+
+/* --- The seam: signature element ----------------------------------------- */
+
+.seam {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 86px;
+}
+
+.seam::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background-image: linear-gradient(var(--line) 55%, transparent 0);
+  background-size: 2px 11px;
+  background-repeat: repeat-y;
+}
+
+.seam-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+/* Live: both answered, guessing open → the seam connects, energized amber. */
+.seam.is-live::before {
+  background-image: none;
+  background: linear-gradient(var(--amber), var(--amber-deep));
+  width: 2.5px;
+}
+
+.seam.is-live .seam-badge {
+  border-color: var(--amber);
+  color: var(--amber-deep);
+  background: #fffaf0;
+  box-shadow: 0 0 0 5px rgba(244, 180, 0, 0.16);
+}
+
+/* Bye: no opponent → seam fades out. */
+.seam.is-bye::before {
+  opacity: 0.4;
+}
+
+.seam.is-bye .seam-badge {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+/* ===========================================================================
+   Questions in play
+   =========================================================================== */
+
+.questions {
+  border-top: 1px solid var(--line);
+  padding: clamp(18px, 4vw, 26px) clamp(18px, 4vw, 30px) clamp(20px, 4vw, 28px);
+  background: rgba(236, 238, 243, 0.5);
+}
+
+.questions-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.questions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.question {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 15px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.question-tick {
+  flex: none;
+  margin-top: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--indigo);
+  opacity: 0.7;
+}
+
+.question-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* ===========================================================================
+   Status bar + CTA
+   =========================================================================== */
+
+.statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  padding: clamp(18px, 4vw, 24px) clamp(18px, 4vw, 30px);
+  border-top: 1px solid var(--line);
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.status-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 18px;
+  margin: 0;
+}
+
+.status-detail {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.status-flag {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex: none;
+}
+
+.tone-pending .status-flag { background: var(--ink-soft); }
+.tone-live .status-flag {
+  background: var(--amber);
+  box-shadow: 0 0 0 4px rgba(244, 180, 0, 0.18);
+}
+.tone-done .status-flag { background: var(--indigo-bright); }
+.tone-neutral .status-flag { background: var(--line); }
+
+.cta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.cta-primary {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.cta-primary:hover { background: #000; }
+
+.cta-live {
+  background: var(--amber);
+  color: #2a1d00;
+}
+
+.cta-live:hover { background: #ffc21f; }
+
+.cta-disabled {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.cta-arrow {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ===========================================================================
+   Recap (week closed)
+   =========================================================================== */
+
+.recap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.recap-tally {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.recap-score {
+  font-size: 30px;
+}
+
+.recap-score-mine { color: var(--indigo); }
+
+.recap-vs {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ===========================================================================
+   Dev actor switcher (dev only)
+   =========================================================================== */
+
+.dev-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px;
+  border: 1px dashed var(--indigo-bright);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.dev-actor-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--indigo);
+}
+
+.dev-actor-select {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+/* ===========================================================================
+   Responsive
+   =========================================================================== */
+
+@media (max-width: 620px) {
+  .fixture-head {
+    grid-template-columns: 1fr;
+  }
+
+  .side-opp {
+    text-align: left;
+    align-items: flex-start;
+    border-top: 1px solid var(--line);
+  }
+
+  .side-opp .side-pip { flex-direction: row; }
+
+  .seam {
+    width: 100%;
+    height: 52px;
+  }
+
+  .seam::before {
+    top: 50%;
+    bottom: auto;
+    left: 14px;
+    right: 14px;
+    width: auto;
+    height: 2px;
+    transform: translateY(-50%);
+    background-image: linear-gradient(90deg, var(--line) 55%, transparent 0);
+    background-size: 11px 2px;
+    background-repeat: repeat-x;
+  }
+
+  .seam.is-live::before {
+    background: linear-gradient(90deg, var(--amber), var(--amber-deep));
+    height: 2.5px;
+    width: auto;
+  }
+
+  .questions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statusbar { flex-direction: column; align-items: stretch; }
+  .cta { justify-content: center; }
+}
+
+/* ===========================================================================
+   Answer form — the "your move" call to action
+   =========================================================================== */
+
+.answer-form {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(18px, 4vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.answer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.answer-field-label {
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.answer-field input {
+  font: inherit;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+}
+
+.answer-field input:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 1px;
+}
+
+.answer-field input:disabled {
+  opacity: 0.6;
+}
+
+.answer-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+}
+
+.answer-form button {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 20px;
+  cursor: pointer;
+}
+
+.answer-form button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ===========================================================================
+   Home CTA — link into the guess flow
+   =========================================================================== */
+
+.home-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  align-self: flex-start;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--surface);
+  background: var(--indigo);
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+}
+
+.home-cta:hover {
+  background: var(--indigo-bright);
+}
+
+/* Secondary, always-available action: propose a question for an upcoming week.
+   A quiet bordered pill in the mono-label vocabulary so it reads as secondary
+   and never competes with the indigo filled primary CTA above it. */
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  align-self: flex-start;
+  width: fit-content;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 16px;
+}
+
+.home-link:hover {
+  color: var(--indigo);
+  border-color: var(--indigo-bright);
+}
+
+/* ===========================================================================
+   Guess flow
+   =========================================================================== */
+
+.guess {
+  flex: 1;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px) clamp(16px, 5vw, 40px) 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guess-locked {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.guess-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guess-question {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(16px, 3.5vw, 24px);
+}
+
+.guess-question[data-locked] {
+  opacity: 0.92;
+}
+
+.guess-question-text {
+  margin: 0 0 2px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.guess-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  cursor: pointer;
+  font-size: 14.5px;
+}
+
+.guess-option input {
+  accent-color: var(--indigo-bright);
+}
+
+.guess-option:hover {
+  border-color: var(--indigo-bright);
+}
+
+/* Highlight the option whose radio is currently selected. */
+.guess-option:has(input:checked) {
+  border-color: var(--indigo-bright);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.guess-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+}
+
+.guess-form button {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.guess-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.reveal-result {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+}
+
+/* The reveal is the memorable beat: indigo for a hit, amber signal for a miss.
+   (correct → indigo brand tint; incorrect → amber signal tint) */
+.reveal-result[data-correct="true"] {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+.reveal-result[data-correct="false"] {
+  background: rgba(244, 180, 0, 0.12);
+  border-color: rgba(244, 180, 0, 0.5);
+}
+
+.reveal-mark {
+  font-weight: 700;
+}
+
+.reveal-result[data-correct="true"] .reveal-mark {
+  color: var(--indigo-bright);
+}
+
+.reveal-result[data-correct="false"] .reveal-mark {
+  color: var(--amber-deep);
+}
+
+.reveal-label {
+  font-weight: 600;
+}
+
+.reveal-answer {
+  color: var(--ink-soft);
+}
+
+/* ===========================================================================
+   Generic page header (leaderboard, history)
+   =========================================================================== */
+
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px) clamp(16px, 5vw, 40px) 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-kicker {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.page-title {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: clamp(26px, 5vw, 34px);
+}
+
+.page-empty {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+/* ===========================================================================
+   Leaderboard
+   =========================================================================== */
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.leaderboard-toggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+}
+
+.leaderboard-toggle button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.leaderboard-toggle button[aria-pressed="true"] {
+  color: var(--surface);
+  background: var(--indigo);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+}
+
+.leaderboard-table th {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: rgba(236, 238, 243, 0.5);
+}
+
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.leaderboard-table td:first-child {
+  font-family: var(--font-mono), monospace;
+  color: var(--indigo);
+  width: 3.5em;
+}
+
+/* ===========================================================================
+   History list
+   =========================================================================== */
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(16px, 3.5vw, 22px);
+}
+
+.recap-week {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ===========================================================================
+   Admin — dashboard + question review
+   =========================================================================== */
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-nav a {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  padding: 14px 22px;
+}
+
+.admin-nav a:hover {
+  border-color: var(--indigo-bright);
+  color: var(--indigo);
+}
+
+/* ---------------------------------------------------------------------------
+   Restart week — admin destructive action.
+   A cautionary amber outline that fills on hover, deliberately distinct from
+   the indigo primary CTAs. Sits below the page title with breathing room.
+   --------------------------------------------------------------------------- */
+.restart-week-btn {
+  align-self: flex-start;
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+  background: var(--surface);
+  border: 1.5px solid var(--amber-deep);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease, box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+/* Refresh glyph — hidden while loading so the shared Button's spinner shows. */
+.restart-week-btn::before {
+  content: "↻";
+  font-size: 15px;
+  line-height: 1;
+}
+
+.restart-week-btn:hover:not(:disabled) {
+  color: var(--surface);
+  background: var(--amber-deep);
+  box-shadow: 0 8px 20px -12px rgba(185, 126, 0, 0.8);
+}
+
+.restart-week-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.restart-week-btn:focus-visible {
+  outline: 2px solid var(--amber-deep);
+  outline-offset: 2px;
+}
+
+.restart-week-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.restart-week-btn:disabled::before {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .restart-week-btn {
+    transition: none;
+  }
+  .restart-week-btn:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.admin-question-review {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(18px, 4vw, 30px);
+}
+
+.admin-question-review-week {
+  margin: 0 0 2px;
+  color: var(--ink-soft);
+}
+
+.admin-question-review-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+}
+
+.admin-question-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-question-row input {
+  flex: 1;
+  min-width: 240px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+}
+
+.admin-question-row input:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 1px;
+}
+
+/* Per-question secondary actions (Save / Regenerate). */
+.admin-question-row button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.admin-question-row button:hover {
+  color: var(--indigo);
+  border-color: var(--indigo-bright);
+}
+
+/* Primary action: the direct-child "Approve & open week" button. */
+.admin-question-review > button {
+  align-self: flex-start;
+  margin-top: 4px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 22px;
+  cursor: pointer;
+}
+
+.admin-question-review > button:hover {
+  background: var(--indigo-bright);
+}
+
+/* ===========================================================================
+   Admin — matchup list
+   =========================================================================== */
+
+.admin-matchup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-matchup-weekstatus {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.admin-matchup-ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.admin-matchup-empty {
+  padding: clamp(16px, 3vw, 24px);
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.admin-matchup-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: clamp(14px, 3vw, 20px) clamp(16px, 3.5vw, 24px);
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-matchup-row:last-child {
+  border-bottom: none;
+}
+
+/* --- Status badge (small pill) ------------------------------------------- */
+
+.admin-matchup-status {
+  flex: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--canvas);
+  white-space: nowrap;
+}
+
+/* Guessing unlocked: amber signal */
+.admin-matchup-row:has(.admin-matchup-status[data-status="guessing_unlocked"]) .admin-matchup-status {
+  color: var(--amber-deep);
+  border-color: var(--amber);
+  background: rgba(244, 180, 0, 0.1);
+}
+
+/* --- Participant groups --------------------------------------------------- */
+
+.admin-matchup-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-matchup-participant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.admin-matchup-player-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* "Answered" badge — indigo tint to signal completion */
+.admin-matchup-answered {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  background: rgba(79, 70, 229, 0.1);
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* --- Byes region ---------------------------------------------------------- */
+
+.admin-matchup-byes {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(16px, 3.5vw, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-matchup-byes-heading {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+.admin-matchup-byes-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.admin-matchup-byes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-matchup-byes-item {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
+@media (max-width: 620px) {
+  .admin-matchup-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-matchup-players {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* ===========================================================================
+   Admin — roster manager
+   =========================================================================== */
+
+.roster-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roster-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+}
+
+/* --- Player rows table --------------------------------------------------- */
+
+.roster-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.roster-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px clamp(14px, 3vw, 22px);
+  border-bottom: 1px solid var(--line);
+}
+
+.roster-row:last-child {
+  border-bottom: none;
+}
+
+/* --- Editable fields ----------------------------------------------------- */
+
+.roster-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.roster-field-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.roster-input {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 160px;
+}
+
+.roster-input-slack {
+  width: 100px;
+}
+
+.roster-input:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 1px;
+}
+
+/* --- Checkboxes ---------------------------------------------------------- */
+
+.roster-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.roster-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--indigo-bright);
+}
+
+/* --- Per-row action buttons ---------------------------------------------- */
+
+.roster-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.roster-btn-save,
+.roster-btn-remove {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+/* Secondary style for Save */
+.roster-btn-save {
+  color: var(--ink-soft);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+}
+
+.roster-btn-save:hover {
+  color: var(--indigo);
+  border-color: var(--indigo-bright);
+}
+
+/* Ghost/danger-ish style for Remove — amber-deep text, no fill */
+.roster-btn-remove {
+  color: var(--amber-deep);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.roster-btn-remove:hover {
+  border-color: var(--amber-deep);
+  background: rgba(185, 126, 0, 0.06);
+}
+
+/* Reactivate — indigo tint to signal a constructive action */
+.roster-btn-reactivate {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  color: var(--indigo);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.roster-btn-reactivate:hover {
+  border-color: var(--indigo-bright);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+/* Dim inactive rows visually */
+.roster-row.is-inactive {
+  opacity: 0.55;
+}
+
+/* --- Add-player section -------------------------------------------------- */
+
+.roster-add {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: clamp(14px, 3vw, 20px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* Primary add button */
+.roster-btn-add {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.roster-btn-add:hover {
+  background: var(--indigo-bright);
+}
+
+/* Roster-wide toolbar (Sync Slack IDs). */
+.roster-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+/* Secondary utility button — bordered, distinct from the primary indigo actions. */
+.roster-btn-slack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--indigo);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.roster-btn-slack:hover:not(:disabled) {
+  border-color: var(--indigo-bright);
+  color: var(--indigo-bright);
+}
+
+.roster-btn-slack:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Responsive: allow rows to scroll horizontally on small screens */
+@media (max-width: 640px) {
+  .roster-row {
+    overflow-x: auto;
+  }
+
+  .roster-input {
+    width: 130px;
+  }
+
+  .roster-input-slack {
+    width: 80px;
+  }
+}
+
+/* ===========================================================================
+   Loading spinner (Button) + toasts
+   =========================================================================== */
+
+/* Inline spinner sized to the surrounding button text, inheriting its color. */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  vertical-align: -0.125em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: spinner-spin 0.7s linear infinite;
+}
+
+@keyframes spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Toast viewport: fixed top-right, stacked, above everything ---------- */
+.toast-viewport {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 36px));
+  pointer-events: none;
+}
+
+/* --- Toast card ----------------------------------------------------------- */
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.toast[data-variant="success"] {
+  border-left-color: var(--indigo-bright);
+}
+
+.toast[data-variant="error"] {
+  border-left-color: var(--amber-deep);
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+/* --- Dismiss control ------------------------------------------------------ */
+.toast-dismiss {
+  flex: none;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.toast-dismiss:hover {
+  color: var(--ink);
+}
+
+/* ===========================================================================
+   Modal
+   =========================================================================== */
+
+/* Full-screen dimmed backdrop, centred. Sits above the toast viewport. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 17, 38, 0.45);
+}
+
+/* Centred surface card. */
+.modal {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  animation: modal-pop 0.16s ease-out;
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.modal-body {
+  margin-bottom: 20px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* Primary indigo CTA, mirroring .home-cta / .answer-form button. */
+.modal-ok-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+}
+
+.modal-ok-btn:hover {
+  background: var(--indigo-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    animation: none !important;
+  }
+}
+
+/* ===========================================================================
+   Score dialog — the polished week-complete reveal inside the modal body
+   =========================================================================== */
+
+.score-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+/* The headline figure: "N / M", large and brand-coloured. */
+.score-figure {
+  margin: 0;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--indigo);
+}
+
+/* Small, muted, uppercase caption beneath the figure. */
+.score-caption {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Friendly closing line. */
+.score-note {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+/* ===========================================================================
+   Question suggestions — player "suggestion box" (/suggest)
+   A focused, single-column task: one inviting field, one clear action, and a
+   warm confirmation. Reuses the fixture card language (surface + line + shadow)
+   with the indigo primary; amber is reserved for the app's live/error signals.
+   =========================================================================== */
+
+.suggest {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px) clamp(16px, 5vw, 40px) 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.suggest-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggest-kicker {
+  margin: 0;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--indigo);
+}
+
+.suggest-title {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(30px, 5vw, 46px);
+}
+
+.suggest-lede {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 48ch;
+}
+
+/* --- The form card ------------------------------------------------------- */
+
+.suggest-form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(20px, 4vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.suggest-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggest-field-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.suggest-input {
+  font: inherit;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  line-height: 1.45;
+  min-height: 92px;
+  resize: vertical;
+}
+
+.suggest-input::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+
+.suggest-input:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 1px;
+}
+
+.suggest-input:disabled {
+  opacity: 0.6;
+}
+
+.suggest-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.suggest-error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+}
+
+.suggest-form button {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 22px;
+  cursor: pointer;
+}
+
+.suggest-form button:hover:not(:disabled) {
+  background: var(--indigo-bright);
+}
+
+.suggest-form button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* --- The confirmation state (fire-and-forget) ---------------------------- */
+
+.suggest-confirmation {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: clamp(22px, 4vw, 32px);
+}
+
+.suggest-check {
+  grid-row: 1 / span 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--indigo-bright);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.suggest-confirmation-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.suggest-thanks {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-size: clamp(21px, 3.5vw, 26px);
+  color: var(--ink);
+}
+
+.suggest-subtext {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* "Add another" — a calm bordered reset under the message, not a loud CTA. */
+.suggest-confirmation button {
+  grid-column: 2;
+  justify-self: start;
+  margin-top: 6px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--indigo);
+  background: transparent;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.suggest-confirmation button:hover {
+  border-color: var(--indigo-bright);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+/* ===========================================================================
+   Question suggestions — admin pool panel (inside the question review card)
+   A quiet reference block under the draft slots: a mono heading with a count,
+   then one inset card per pending suggestion (text + attribution).
+   =========================================================================== */
+
+.admin-suggestions {
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-suggestions-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-suggestions-heading {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.admin-suggestions-count {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--indigo);
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.admin-suggestions-empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.admin-suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-suggestion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.admin-suggestion-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.admin-suggestion-author {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Control row: slot picker + Use / Discard actions. Wraps on small screens. */
+.admin-suggestion-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* Slot picker — styled like the dev-actor / question-row inputs. */
+.admin-suggestion-slot {
+  flex: 1;
+  min-width: 200px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  cursor: pointer;
+}
+
+.admin-suggestion-slot:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 1px;
+}
+
+/* Use — indigo primary, mirroring the approve action. */
+.admin-suggestion-use {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--surface);
+  background: var(--indigo);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.admin-suggestion-use:hover {
+  background: var(--indigo-bright);
+}
+
+/* Discard — amber-deep bordered ghost, mirroring the roster remove button. */
+.admin-suggestion-discard {
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--amber-deep);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.admin-suggestion-discard:hover {
+  border-color: var(--amber-deep);
+  background: rgba(185, 126, 0, 0.06);
+}
+
+@media (max-width: 620px) {
+  .admin-suggestion-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ===========================================================================
+   Accessibility
+   =========================================================================== */
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .spinner {
+    animation: none !important;
+  }
+}
