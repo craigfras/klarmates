@@ -10,6 +10,7 @@ import Link from "next/link";
 import { getDevActor } from "@/lib/use-cases/getDevActor";
 import { DevActorSwitcher } from "@/components/DevActorSwitcher";
 import { AuthButtons } from "@/components/AuthButtons";
+import { NavLink } from "@/components/NavLink";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -18,9 +19,9 @@ import { AuthButtons } from "@/components/AuthButtons";
 const IS_DEV = process.env.NODE_ENV !== "production";
 
 const PRIMARY_LINKS = [
-  { href: "/", label: "Home", current: true },
-  { href: "/leaderboard", label: "Leaderboard", current: false },
-  { href: "/history", label: "History", current: false },
+  { href: "/", label: "Home" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/history", label: "History" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -48,21 +49,10 @@ export async function Nav() {
       {/* --- Routes + dev tooling --- */}
       <div className="nav-links">
         {PRIMARY_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            className="nav-link"
-            href={link.href}
-            aria-current={link.current ? "page" : undefined}
-          >
-            {link.label}
-          </Link>
+          <NavLink key={link.href} href={link.href} label={link.label} />
         ))}
         {/* --- Admin link: visible only when the current player is an admin --- */}
-        {isAdmin && (
-          <Link className="nav-link" href="/admin">
-            Admin
-          </Link>
-        )}
+        {isAdmin && <NavLink href="/admin" label="Admin" />}
         {/* Local dev: impersonation switcher. Production: real sign in/out. */}
         {devActor ? (
           <DevActorSwitcher

@@ -8,8 +8,12 @@ import type { DevActor } from "@/lib/use-cases/getDevActor";
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/use-cases/getDevActor", () => ({ getDevActor: vi.fn() }));
-// DevActorSwitcher (rendered by Nav) uses useRouter.
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+// DevActorSwitcher uses useRouter; NavLink uses usePathname.
+const pathnameMock = vi.fn<() => string>(() => "/");
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+  usePathname: () => pathnameMock(),
+}));
 
 import { getDevActor } from "@/lib/use-cases/getDevActor";
 import { Nav } from "@/components/Nav";
@@ -60,6 +64,7 @@ const NON_ADMIN_DEV_ACTOR: DevActor = {
 describe("Nav", () => {
   beforeEach(() => {
     vi.mocked(getDevActor).mockReset();
+    pathnameMock.mockReturnValue("/");
   });
 
   it("renders Home, Leaderboard and History links", async () => {
@@ -70,6 +75,25 @@ describe("Nav", () => {
     expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Leaderboard" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "History" })).toBeInTheDocument();
+  });
+
+  it("marks only the active route's link as the current page (selector follows the tab)", async () => {
+    vi.mocked(getDevActor).mockResolvedValue(DEV_ACTOR);
+    pathnameMock.mockReturnValue("/leaderboard");
+
+    render(await Nav());
+
+    // The selector styling is driven by aria-current="page".
+    expect(screen.getByRole("link", { name: "Leaderboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute(
+      "aria-current",
+    );
+    expect(screen.getByRole("link", { name: "History" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   it("renders the dev switcher with an option per player when a dev actor resolves", async () => {
