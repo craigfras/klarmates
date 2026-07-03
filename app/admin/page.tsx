@@ -9,6 +9,7 @@
 
 import Link from "next/link";
 import { getDevActor } from "@/lib/use-cases/getDevActor";
+import { AdminJobControls } from "@/components/AdminJobControls";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -17,6 +18,9 @@ import { getDevActor } from "@/lib/use-cases/getDevActor";
 const QUESTIONS_HREF = "/admin/questions";
 const ROSTER_HREF = "/admin/roster";
 const MATCHUPS_HREF = "/admin/matchups";
+
+const MANUAL_ACTIONS_KICKER = "Manual actions";
+const MANUAL_ACTIONS_HEADING = "Run a job now";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -51,6 +55,13 @@ export default async function AdminPage() {
         <Link href={ROSTER_HREF}>Roster</Link>
         <Link href={MATCHUPS_HREF}>Matchups</Link>
       </nav>
+
+      {/* --- Manual actions: on-demand triggers for the scheduled jobs --- */}
+      <section className="admin-manual-actions">
+        <p className="page-kicker mono">{MANUAL_ACTIONS_KICKER}</p>
+        <h2 className="admin-section-heading">{MANUAL_ACTIONS_HEADING}</h2>
+        <AdminJobControls />
+      </section>
     </main>
   );
 }

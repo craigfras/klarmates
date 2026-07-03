@@ -230,6 +230,44 @@ export const closeOpenWeek = async (
 };
 
 // ===========================================================================
+// closeCurrentWeek — FORCE variant: close ANY open week regardless of endsAt
+// ===========================================================================
+//
+// Shares closeOpenWeek's orchestration verbatim (it delegates to it) but swaps
+// the default finder for one that drops the endsAt<=now guard, so an admin can
+// close the open week early. The finder is DB-coupled (build-verified, not
+// unit-tested) — mirroring findClosableWeekId above.
+
+/**
+ * The latest open week, REGARDLESS of endsAt. Unlike findClosableWeekId this
+ * has no endsAt<=now guard, so it also matches a still-running open week — the
+ * whole point of the force variant. Not idempotent by itself; that is fine
+ * because the force path is an explicit manual admin action.
+ */
+const findOpenWeekId = async (): Promise<string | null> => {
+  const prisma = getPrisma();
+  const week = await prisma.week.findFirst({
+    where: { status: OPEN_STATUS },
+    orderBy: { startsAt: "desc" },
+  });
+  return week?.id ?? null;
+};
+
+const defaultForceCloseDeps: CloseDeps = {
+  ...defaultCloseDeps,
+  findClosableWeekId: findOpenWeekId,
+};
+
+/**
+ * Force-closes the latest open week (if any) via the shared closeOpenWeek
+ * orchestration, ignoring the endsAt<=now guard. No-ops when there is no open
+ * week to close.
+ */
+export const closeCurrentWeek = async (
+  deps: CloseDeps = defaultForceCloseDeps,
+): Promise<{ closed: boolean; weekId?: string }> => closeOpenWeek(deps);
+
+// ===========================================================================
 // rolloverSeasonIfDue — start the next quarter's season when the current expires
 // ===========================================================================
 
@@ -336,6 +374,30 @@ export const rolloverSeasonIfDue = async (
     return { rolledOver: false };
   }
   if (!isSeasonExpired(today, current.endsOn)) {
+    return { rolledOver: false };
+  }
+  const next = nextQuarterAfter(current.endsOn);
+  const created = await deps.rollover(current.id, next);
+  return { rolledOver: true, newSeasonId: created.id };
+};
+
+// ===========================================================================
+// forceRolloverSeason — FORCE variant: roll over even when NOT expired
+// ===========================================================================
+//
+// Identical to rolloverSeasonIfDue but WITHOUT the isSeasonExpired guard, so an
+// admin can start the next quarter's season early. Reuses defaultRolloverDeps.
+
+/**
+ * Rolls the current season into the next quarter unconditionally (skipping the
+ * expiry guard). No current season is still a clean no-op.
+ */
+export const forceRolloverSeason = async (
+  today: Date,
+  deps: RolloverDeps = defaultRolloverDeps,
+): Promise<{ rolledOver: boolean; newSeasonId?: string }> => {
+  const current = await deps.getCurrentSeason();
+  if (!current) {
     return { rolledOver: false };
   }
   const next = nextQuarterAfter(current.endsOn);
