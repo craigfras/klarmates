@@ -18,7 +18,7 @@ const HTTP_OK = 200;
 // Handler
 // ---------------------------------------------------------------------------
 
-export async function GET(_request?: Request): Promise<Response> {
+export async function GET(_request: Request): Promise<Response> {
   const { currentPlayerId } = await getDevActor();
 
   const history = await gameService.getMyHistory(currentPlayerId);
