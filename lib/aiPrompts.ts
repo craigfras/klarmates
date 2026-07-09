@@ -95,10 +95,12 @@ export const buildDistractorsPrompt = (
     `For an icebreaker guessing game, the question is: "${question}".`,
     `One player's real answer is: "${realAnswer}".`,
     `Generate exactly ${count} plausible but wrong alternative answers that a`,
-    "different person might plausibly have given. Each distractor should be",
-    "similar in form, style, and length to the real answer so it is hard to",
-    `tell apart. Never duplicate the real answer "${realAnswer}", and do not`,
-    "repeat any distractor.",
+    "different person might plausibly have given. Each distractor should match",
+    "the real answer in form, style, and length, but must describe a clearly",
+    "different thing — a distinct subject, choice, or detail. Do not produce a",
+    "near-paraphrase, synonym, or minor variation of the real answer; the",
+    `content must be meaningfully different. Never duplicate the real answer`,
+    `"${realAnswer}", and do not repeat any distractor.`,
     `${JSON_ONLY_INSTRUCTION} Use the shape ` +
       `{"${DISTRACTORS_JSON_KEY}": ["...", ...]} with exactly ${count} strings.`,
   ].join(" ");
