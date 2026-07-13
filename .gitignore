@@ -41,3 +41,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tokensave local code-graph database (generated, machine-local)
+.tokensave/*.db
+.tokensave/*.db-shm
+.tokensave/*.db-wal
