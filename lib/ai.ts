@@ -178,6 +178,23 @@ const LIST_MARKER_PATTERN = /^\s*(?:\d+[.)]|[-*•])\s*/;
 /** Surrounding straight/smart quotes stripped in the newline fallback. */
 const SURROUNDING_QUOTE_PATTERN = /^["'“”‘’]+|["'“”‘’]+$/g;
 
+/**
+ * Leading markdown code fence (```` ``` ```` optionally followed by a language
+ * tag such as `json`) plus its trailing newline. Models often wrap JSON output
+ * in a fenced block; the fence must be stripped before parsing.
+ */
+const LEADING_CODE_FENCE_PATTERN = /^```[^\n]*\n?/;
+
+/** Trailing markdown code fence (```` ``` ````) plus any preceding newline. */
+const TRAILING_CODE_FENCE_PATTERN = /\n?```$/;
+
+/**
+ * Marks text the model INTENDED as JSON: after de-fencing and trimming, a
+ * leading `{` or `[` means malformed content must throw rather than be shredded
+ * by the newline fallback into per-line fragments.
+ */
+const JSON_START_PATTERN = /^[{[]/;
+
 /** Narrows an unknown value to an array of strings. */
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
@@ -202,16 +219,34 @@ const parseNewlineList = (raw: string): string[] =>
     .filter((line) => line.length > 0);
 
 /**
- * Tolerant parser for a model's list output. Tries, in order:
- *   1. A JSON string array (`["a","b"]`).
- *   2. A JSON object — prefers a known list key (`questions` / `distractors`),
- *      then falls back to the first array-valued property.
- *   3. A newline-delimited fallback that strips list markers, numbering, and
- *      surrounding quotes, trims, and drops empty lines.
+ * Tolerant parser for a model's list output. It first strips any surrounding
+ * markdown code fences and trims. Then:
+ *   - If the text is JSON-INTENDED (first non-whitespace char is `{` or `[`), it
+ *     is parsed as JSON and, on failure, the parse error is THROWN — never fed
+ *     to the newline fallback. This prevents truncated/malformed JSON (e.g.
+ *     Gemini hitting its output-token limit mid-object) from being shredded by
+ *     "\n" into raw scaffolding fragments that leak in as options; the caller's
+ *     retry-then-fallback path runs instead. On successful parse it extracts:
+ *       1. A JSON string array (`["a","b"]`).
+ *       2. A JSON object — prefers a known list key (`questions` / `distractors`),
+ *          then falls back to the first array-valued property.
+ *     If the parse succeeds but yields no usable string array, it falls through
+ *     to the newline fallback below.
+ *   - Otherwise the newline-delimited fallback strips list markers, numbering,
+ *     and surrounding quotes, trims, and drops empty lines.
  */
 export const parseGeneratedList = (raw: string): string[] => {
-  try {
-    const parsed: unknown = JSON.parse(raw);
+  // Trim first so whitespace/newlines around the fences don't defeat the
+  // anchored fence patterns (a valid fenced response must still be de-fenced).
+  const stripped = raw
+    .trim()
+    .replace(LEADING_CODE_FENCE_PATTERN, "")
+    .replace(TRAILING_CODE_FENCE_PATTERN, "")
+    .trim();
+
+  if (JSON_START_PATTERN.test(stripped)) {
+    // JSON-intended: on parse failure the error propagates (do NOT fall back).
+    const parsed: unknown = JSON.parse(stripped);
     if (isStringArray(parsed)) {
       return parsed;
     }
@@ -227,10 +262,9 @@ export const parseGeneratedList = (raw: string): string[] => {
         return firstArray;
       }
     }
-  } catch {
-    // Not JSON — fall through to the newline-delimited parser below.
   }
-  return parseNewlineList(raw);
+
+  return parseNewlineList(stripped);
 };
 
 /**

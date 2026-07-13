@@ -128,6 +128,63 @@ describe("ai: parseGeneratedList", () => {
   it("trims whitespace and drops empty lines in the newline fallback", () => {
     expect(parseGeneratedList("  a  \n\n   \n b \n")).toEqual(["a", "b"]);
   });
+
+  // -------------------------------------------------------------------------
+  // Regression: truncated / malformed JSON must THROW, never newline-split
+  //
+  // Gemini can hit the output-token limit mid-object, returning JSON that
+  // starts with `{`/`[` but never closes. The old parser caught the parse
+  // error and shredded the raw text by "\n", turning fragments like `{`,
+  // `"distractors": [`, and `"...fridge",` into answer options that were then
+  // stored in the DB. A broken JSON-shaped response must throw so the caller's
+  // retry-then-fallback path runs instead.
+  // -------------------------------------------------------------------------
+
+  it("throws on a truncated JSON object and does NOT emit its raw lines as options", () => {
+    const truncated =
+      '{\n' +
+      '  "distractors": [\n' +
+      '    "I prefer eating almost all of my meals completely cold straight from the fridge",';
+
+    expect(() => parseGeneratedList(truncated)).toThrow();
+
+    // The exact reported bug: raw JSON scaffolding leaked in as options.
+    let leaked: string[] | undefined;
+    try {
+      leaked = parseGeneratedList(truncated);
+    } catch {
+      leaked = undefined;
+    }
+    expect(leaked).toBeUndefined();
+    expect(leaked ?? []).not.toContain("{");
+    expect(leaked ?? []).not.toContain('"distractors": [');
+  });
+
+  it("throws on a truncated JSON array", () => {
+    expect(() => parseGeneratedList('[\n  "a",\n  "b",')).toThrow();
+  });
+
+  it("throws on a malformed-but-JSON-shaped object", () => {
+    expect(() => parseGeneratedList("{ not valid json")).toThrow();
+  });
+
+  // -------------------------------------------------------------------------
+  // Markdown code fences must be stripped before parsing
+  // -------------------------------------------------------------------------
+
+  it("strips ```json fences around a JSON array before parsing", () => {
+    expect(parseGeneratedList('```json\n["a","b"]\n```')).toEqual(["a", "b"]);
+  });
+
+  it("strips plain ``` fences around a JSON array before parsing", () => {
+    expect(parseGeneratedList('```\n["a","b"]\n```')).toEqual(["a", "b"]);
+  });
+
+  it("strips ```json fences around a JSON object with a distractors key", () => {
+    expect(
+      parseGeneratedList('```json\n{"distractors":["x","y","z"]}\n```'),
+    ).toEqual(["x", "y", "z"]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -305,6 +362,25 @@ describe("ai: createAiDistractorGenerator", () => {
 
     expect(result).toEqual(FALLBACK_DISTRACTORS);
     expect(calls.count).toBe(SINGLE_CALL);
+  });
+
+  // -------------------------------------------------------------------------
+  // Regression: truncated JSON on every attempt must fall back to the stub,
+  // never surface raw JSON scaffolding (`{`, `"distractors": [`) as options.
+  // -------------------------------------------------------------------------
+
+  it("falls back on truncated JSON and never yields raw JSON scaffolding as distractors", async () => {
+    const truncated = '{\n  "distractors": [\n    "a",';
+    const complete = vi.fn().mockResolvedValue(truncated);
+    const { generator: fallback, calls } = makeFallbackDistractorGenerator();
+
+    const gen = createAiDistractorGenerator({ complete, fallback });
+    const result = await gen.generateDistractors(QUESTION, REAL_ANSWER);
+
+    expect(result).toEqual(FALLBACK_DISTRACTORS);
+    expect(calls.count).toBe(SINGLE_CALL);
+    expect(result).not.toContain("{");
+    expect(result).not.toContain('"distractors": [');
   });
 });
 
