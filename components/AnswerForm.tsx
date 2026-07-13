@@ -9,11 +9,16 @@
  * the API — this view carries none.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { useOptionalToast } from "@/components/Toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/components/uiMessages";
+import {
+  clearAnswerDraft,
+  loadAnswerDraft,
+  saveAnswerDraft,
+} from "@/lib/services/answerDraftStore";
 import type { AnswerSubmission, MyWeekView } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -42,6 +47,27 @@ export function AnswerForm({ view }: AnswerFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
 
+  // --- Draft auto-save: hydrate on mount, persist on change -------------
+  // Read localStorage after mount (never during render) so the server-rendered
+  // markup matches the first client render and no hydration mismatch occurs.
+  // The draft cannot be derived at render time (the server has no
+  // localStorage), so this one-shot post-mount seed is intentional.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-mount hydration from localStorage; not derivable during SSR render
+    setTexts(loadAnswerDraft(view.weekId));
+  }, [view.weekId]);
+
+  // Persist every change so an accidental tab close keeps the draft. Skip the
+  // first commit so the pre-hydration empty state never clobbers a saved draft.
+  const draftHydrated = useRef(false);
+  useEffect(() => {
+    if (!draftHydrated.current) {
+      draftHydrated.current = true;
+      return;
+    }
+    saveAnswerDraft(view.weekId, texts);
+  }, [texts, view.weekId]);
+
   const handleChange = (questionId: string, value: string) => {
     setTexts((previous) => ({ ...previous, [questionId]: value }));
   };
@@ -66,6 +92,7 @@ export function AnswerForm({ view }: AnswerFormProps) {
 
       if (response.ok) {
         setSubmitted(true);
+        clearAnswerDraft(view.weekId);
         toast.success(SUCCESS_TOAST);
         router.refresh();
       } else {

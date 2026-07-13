@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AnswerForm } from "@/components/AnswerForm";
 import { ToastProvider, ToastViewport } from "@/components/Toast";
+import { loadAnswerDraft, saveAnswerDraft } from "@/lib/services/answerDraftStore";
 import type { MyWeekView, Player, Question } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -15,6 +16,24 @@ const SPINNER_TEST_ID = "spinner";
 const SUCCESS_TOAST_PATTERN = /submitted/i;
 const ERROR_VARIANT = "error";
 const NETWORK_ERROR_MESSAGE = "network down";
+
+// A draft already persisted before the form mounts (hydration source).
+const SAVED_DRAFT: Record<string, string> = {
+  q0: "restored answer 0",
+  q1: "restored answer 1",
+  q2: "restored answer 2",
+  q3: "restored answer 3",
+};
+
+// The map that typeAllAnswers produces, mirrored for draft assertions.
+const TYPED_DRAFT: Record<string, string> = {
+  q0: "answer 0",
+  q1: "answer 1",
+  q2: "answer 2",
+  q3: "answer 3",
+};
+
+const EMPTY_DRAFT: Record<string, string> = {};
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -117,10 +136,12 @@ const typeAllAnswers = async (user: ReturnType<typeof userEvent.setup>) => {
 
 beforeEach(() => {
   refresh.mockClear();
+  localStorage.clear();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 // ---------------------------------------------------------------------------
@@ -325,5 +346,126 @@ describe("AnswerForm: fetch rejection regression", () => {
 
     // The existing inline error is also present.
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// draft auto-save: hydration from a saved draft
+// ---------------------------------------------------------------------------
+
+describe("AnswerForm: draft hydration", () => {
+  it("pre-fills each input from the saved draft for view.weekId on mount", () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({}) }));
+    saveAnswerDraft(WEEK_ID, SAVED_DRAFT);
+
+    render(<AnswerForm view={makeView()} />);
+
+    for (const question of FOUR_QUESTIONS) {
+      expect(screen.getByLabelText(question.text)).toHaveValue(
+        SAVED_DRAFT[question.id],
+      );
+    }
+  });
+
+  it("leaves inputs empty when no draft exists for view.weekId", () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({}) }));
+
+    render(<AnswerForm view={makeView()} />);
+
+    for (const question of FOUR_QUESTIONS) {
+      expect(screen.getByLabelText(question.text)).toHaveValue("");
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// draft auto-save: persistence while typing
+// ---------------------------------------------------------------------------
+
+describe("AnswerForm: draft auto-save", () => {
+  it("persists the typed answers for view.weekId as the user types", async () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({}) }));
+    const user = userEvent.setup();
+    render(<AnswerForm view={makeView()} />);
+
+    await typeAllAnswers(user);
+
+    // Assert through the service so we don't couple to the storage key format.
+    await waitFor(() => {
+      expect(loadAnswerDraft(WEEK_ID)).toEqual(TYPED_DRAFT);
+    });
+  });
+
+  it("restores typed text after an accidental unmount then remount", async () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({}) }));
+    const user = userEvent.setup();
+    const { unmount } = render(<AnswerForm view={makeView()} />);
+
+    await typeAllAnswers(user);
+    // The draft must have survived in storage before the tab "closes".
+    await waitFor(() => {
+      expect(loadAnswerDraft(WEEK_ID)).toEqual(TYPED_DRAFT);
+    });
+
+    unmount();
+    render(<AnswerForm view={makeView()} />);
+
+    for (const question of FOUR_QUESTIONS) {
+      expect(screen.getByLabelText(question.text)).toHaveValue(
+        TYPED_DRAFT[question.id],
+      );
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// draft auto-save: cleared on success, kept on failure
+// ---------------------------------------------------------------------------
+
+describe("AnswerForm: draft lifecycle around submit", () => {
+  it("clears the draft for that week after a successful submit", async () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({}) }));
+    const user = userEvent.setup();
+    render(<AnswerForm view={makeView()} />);
+
+    await typeAllAnswers(user);
+    await user.click(screen.getByRole("button"));
+
+    await waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(loadAnswerDraft(WEEK_ID)).toEqual(EMPTY_DRAFT);
+    });
+  });
+
+  it("keeps the draft when the response is not ok (still recoverable)", async () => {
+    mockFetch(async () => ({ ok: false, json: async () => ({}) }));
+    const user = userEvent.setup();
+    render(<AnswerForm view={makeView()} />);
+
+    await typeAllAnswers(user);
+    await user.click(screen.getByRole("button"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+    });
+    // Draft NOT cleared — the player can retry without retyping.
+    expect(loadAnswerDraft(WEEK_ID)).toEqual(TYPED_DRAFT);
+  });
+
+  it("keeps the draft when fetch rejects (network failure)", async () => {
+    mockRejectingFetch(new Error(NETWORK_ERROR_MESSAGE));
+    const user = userEvent.setup();
+    renderWithToasts(makeView());
+
+    await typeAllAnswers(user);
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+
+    // Wait until the rejection has settled and the button is usable again.
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /submit/i })).not.toBeDisabled();
+    });
+    expect(loadAnswerDraft(WEEK_ID)).toEqual(TYPED_DRAFT);
   });
 });

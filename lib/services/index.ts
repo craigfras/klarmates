@@ -10,3 +10,9 @@ import type { GameService } from "@/lib/services/gameService";
 export const gameService: GameService = shouldUseMock(process.env.USE_MOCK)
   ? mockGameService
   : dbGameService;
+
+// NOTE: answer-draft persistence (answerDraftStore) is intentionally NOT
+// re-exported here. This barrel eagerly binds `dbGameService`, which pulls in
+// Prisma/pg/Slack; importing it from a "use client" view would drag that
+// server-only code into the client bundle. Client views must import the draft
+// store directly from "@/lib/services/answerDraftStore".
