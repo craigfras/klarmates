@@ -28,8 +28,8 @@ const EXPECTED_ONE_CALL = 1;
 // Mocks
 // ---------------------------------------------------------------------------
 
-// The form refreshes after each guess and pushes "/" when the score modal's OK
-// is clicked; both router methods are mocked so either can be asserted.
+// The form pushes "/" when the score modal's OK is clicked, and must never call
+// refresh after a guess; both router methods are mocked so either can be asserted.
 const refresh = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
@@ -530,6 +530,48 @@ describe("GuessForm: score modal on completion", () => {
 
     expect(push).toHaveBeenCalledTimes(EXPECTED_ONE_CALL);
     expect(push).toHaveBeenCalledWith(HOME_ROUTE);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// regression: a successful guess must NOT trigger router.refresh()
+// ---------------------------------------------------------------------------
+//
+// Bug: handleGuess called router.refresh() after a successful POST. On the
+// server, refresh() re-runs gameService.getGuessSheet(...), which re-shuffles
+// every question's options from scratch (shuffle order is not persisted). The
+// visible effect: after one guess, all OTHER questions' candidate answers
+// reshuffle, plus an extra slow server round-trip. The reveal/lock is driven
+// entirely by local React state (setResults), so refresh() is redundant and
+// harmful. This guards against the refresh() call ever returning.
+
+describe("GuessForm: regression — no router.refresh after a guess", () => {
+  it("does NOT call router.refresh() after a successful guess resolves", async () => {
+    const result: GuessResult = {
+      questionId: "q-first-language",
+      correct: true,
+      realAnswerText: "Assembly on a mainframe",
+    };
+    const fetchMock = mockFetch(async () => okResult(result));
+    const user = userEvent.setup();
+    render(<GuessForm sheet={SHEET} weekId={WEEK_ID} />);
+
+    // Select an option for the first question and submit it.
+    await user.click(screen.getByLabelText("Assembly on a mainframe"));
+    await user.click(screen.getAllByRole("button", { name: /guess/i })[FIRST_QUESTION_INDEX]);
+
+    // The POST completes and the question is revealed from local state alone.
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(EXPECTED_ONE_CALL);
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("Assembly on a mainframe");
+    });
+
+    // No server round-trip / re-shuffle: refresh() must never fire. push() is
+    // reserved for the completion modal and must also stay untouched here.
+    expect(refresh).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 });
 

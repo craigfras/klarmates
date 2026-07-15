@@ -106,7 +106,6 @@ export function GuessForm({ sheet, weekId }: GuessFormProps) {
         const nextResults = { ...results, [questionId]: result };
         setResults(nextResults);
         toast.success(SUCCESS_TOAST);
-        router.refresh();
         // Open the score modal once this guess completes the whole sheet.
         const allComplete = sheet.every((item) => nextResults[item.questionId]);
         if (allComplete) {
