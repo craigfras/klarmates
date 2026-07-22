@@ -22,8 +22,15 @@ import { buildQuestionsPrompt, buildDistractorsPrompt } from "@/lib/aiPrompts";
 /** Wrong options generated per answer (so each answer has 1 real + 3 wrong). */
 export const DISTRACTOR_COUNT = 3;
 
-/** Gemini Flash model for question/distractor generation (config, not inline). */
-export const GEMINI_MODEL = "gemini-3.5-flash";
+/**
+ * Gemini Flash model for question/distractor generation (config, not inline).
+ *
+ * MUST be a model id available on the Gemini *developer* API (`@google/genai` +
+ * API key), NOT a Vertex-only id. A Vertex-only id (e.g. the previous typo
+ * "gemini-3.5-flash") 404s on the developer API, causing every generation call
+ * to silently fall back to the canned stub.
+ */
+export const GEMINI_MODEL = "gemini-3.6-flash";
 
 /**
  * Extra attempts after the first when an AI call fails (network or

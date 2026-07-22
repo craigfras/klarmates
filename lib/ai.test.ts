@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   DISTRACTOR_COUNT,
+  GEMINI_MODEL,
   stubDistractorGenerator,
   type DistractorGenerator,
 } from "@/lib/ai";
@@ -130,5 +131,35 @@ describe("ai: stubDistractorGenerator determinism", () => {
     // Differing inputs should not yield the identical array (would defeat the
     // purpose of seeding on the inputs). At least one element must differ.
     expect(a).not.toEqual(b);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GEMINI_MODEL: pins a model id valid on the developer API (regression)
+// ---------------------------------------------------------------------------
+
+// Gemini Flash models EMPIRICALLY confirmed reachable on the developer API
+// (@google/genai + API key) for a current project, via scripts/probe-distractors
+// (July 2026). Only add an id here after the probe returns real output for it —
+// a wrong/unavailable id 404s and silently falls back to the canned stub, which
+// is what shipped the duplicated, off-topic distractor options.
+const VALID_DEVELOPER_API_GEMINI_MODELS = ["gemini-3.6-flash"] as const;
+
+// Model ids confirmed NOT usable and kept out of the allowlist as guards:
+//   - "gemini-3.5-flash": the original value at the time of the incident.
+//   - "gemini-2.5-flash": 404s with "no longer available to new users" for a
+//     freshly-provisioned project (confirmed via the probe).
+const KNOWN_UNUSABLE_GEMINI_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-2.5-flash",
+] as const;
+
+describe("ai: GEMINI_MODEL", () => {
+  it("is a model id valid on the Gemini developer API", () => {
+    expect(VALID_DEVELOPER_API_GEMINI_MODELS).toContain(GEMINI_MODEL);
+  });
+
+  it("is not one of the model ids confirmed unusable on the developer API", () => {
+    expect(KNOWN_UNUSABLE_GEMINI_MODELS).not.toContain(GEMINI_MODEL);
   });
 });
